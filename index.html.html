@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Jogo da Velha da Hana Cabeçuda</title>
+
+<style>
+body {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    background: #ffe6f0;
+}
+
+h1 {
+    color: #d63384;
+}
+
+#board {
+    display: grid;
+    grid-template-columns: repeat(3, 130px);
+    gap: 5px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.cell {
+    width: 130px;
+    height: 130px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #d63384;
+    cursor: pointer;
+    background: white;
+    border: 2px solid #d63384;
+}
+
+button {
+    margin-top: 15px;
+    padding: 8px 15px;
+    font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Jogo da Velha da Hana Cabeçuda</h1>
+
+<div id="board"></div>
+
+<button onclick="reset()">Recomeçar 🔁</button>
+
+<audio id="musica">
+    <source src="musica.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+
+let board = ["","","","","","","","",""];
+const player = "CE É LINDA";
+const ai = "O";
+
+const boardDiv = document.getElementById("board");
+
+function render() {
+    boardDiv.innerHTML = "";
+    board.forEach((cell, i) => {
+        const btn = document.createElement("button");
+        btn.className = "cell";
+        btn.innerText = cell;
+        btn.onclick = () => move(i);
+        boardDiv.appendChild(btn);
+    });
+}
+
+function checkWin(b, p) {
+    const combos = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+    ];
+    return combos.some(c =>
+        b[c[0]] === p && b[c[1]] === p && b[c[2]] === p
+    );
+}
+
+function minimax(b, isMax) {
+    if (checkWin(b, ai)) return 1;
+    if (checkWin(b, player)) return -1;
+    if (!b.includes("")) return 0;
+
+    if (isMax) {
+        let best = -Infinity;
+        for (let i=0;i<9;i++){
+            if (b[i]==""){
+                b[i]=ai;
+                best=Math.max(best,minimax(b,false));
+                b[i]="";
+            }
+        }
+        return best;
+    } else {
+        let best = Infinity;
+        for (let i=0;i<9;i++){
+            if (b[i]==""){
+                b[i]=player;
+                best=Math.min(best,minimax(b,true));
+                b[i]="";
+            }
+        }
+        return best;
+    }
+}
+
+function bestMove() {
+
+    // 50% chance de jogar aleatório (mais fácil pra Hana 😏)
+    if (Math.random() < 0.5) {
+        let empty = [];
+        for (let i = 0; i < 9; i++) {
+            if (board[i] == "") empty.push(i);
+        }
+        return empty[Math.floor(Math.random() * empty.length)];
+    }
+
+    // 50% inteligente
+    let bestScore = -Infinity;
+    let move;
+    for (let i=0;i<9;i++){
+        if (board[i]==""){
+            board[i]=ai;
+            let score=minimax(board,false);
+            board[i]="";
+            if(score>bestScore){
+                bestScore=score;
+                move=i;
+            }
+        }
+    }
+    return move;
+}
+
+function move(i){
+    if(board[i]!="") return;
+
+    board[i]=player;
+    render();
+
+    if(checkWin(board,player)){
+        document.getElementById("musica").play();
+        setTimeout(()=>{
+            alert("🔥 Ce ganhou, amor 😏💖\n\nDia 06/03/2026 tem date...\nE vou te dar aquele beijo saliente, aham");
+            reset();
+        },200);
+        return;
+    }
+
+    if(!board.includes("")){
+        setTimeout(()=>{
+            alert("Deu velha 😏 tenta de novo, CE É LINDA ");
+            reset();
+        },200);
+        return;
+    }
+
+    let aiMove = bestMove();
+    board[aiMove]=ai;
+    render();
+
+    if(checkWin(board,ai)){
+        setTimeout(()=>{
+            alert("😈 Você perdeu...\nVai ficar com saudade 😏\nMas pode tentar até ganhar, DUR");
+            reset();
+        },200);
+    }
+}
+
+function reset(){
+    board=["","","","","","","","",""];
+    render();
+}
+
+render();
+
+</script>
+
+</body>
+</html>
